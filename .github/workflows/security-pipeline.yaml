@@ -26,46 +26,33 @@ jobs:
       with:
         python-version: '3.11'
 
-    # 1. Secret Scanning
     - name: Gitleaks - Secret Scanning
       uses: gitleaks/gitleaks-action@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # 2. SAST - Semgrep
     - name: Semgrep - SAST Analysis
       uses: semgrep/semgrep-action@v1
       with:
         config: auto
 
-    # 3. Python Security
     - name: Install Python dependencies
       run: |
         pip install bandit safety
         pip install -r app/requirements.txt
 
     - name: Bandit - Python Security Linter
-      run: bandit -r app/src/ -f json -o bandit-report.json || true
+      run: bandit -r app/src/ -f json -o bandit-report.json
       continue-on-error: true
 
     - name: Safety - Dependency Scanner
-      run: safety check -r app/requirements.txt --json > safety-report.json || true
+      run: safety check -r app/requirements.txt --json > safety-report.json
       continue-on-error: true
 
-    # 4. Dockerfile Linting
     - name: Hadolint - Dockerfile Linter
       uses: hadolint/hadolint-action@v3.1.0
       with:
         dockerfile: app/Dockerfile
-
-    - name: Upload Security Reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-reports
-        path: |
-          bandit-report.json
-          safety-report.json
 
   build-and-scan:
     name: Build and Scan Docker Images
@@ -83,7 +70,6 @@ jobs:
       run: |
         docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -f app/Dockerfile app/
 
-    # 5. Container Scanning - Trivy
     - name: Trivy - Container Scanner
       uses: aquasecurity/trivy-action@master
       with:
@@ -92,13 +78,12 @@ jobs:
         output: 'trivy-results.sarif'
         severity: 'CRITICAL,HIGH'
 
-    - name: Upload Trivy results to GitHub Security
+    - name: Upload Trivy results
       uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
 
-    # 6. Grype - Alternative Container Scanner
     - name: Grype - Vulnerability Scanner
       uses: anchore/scan-action@v3
       with:
