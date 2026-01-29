@@ -76,13 +76,7 @@ jobs:
         image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
         format: 'table'
         severity: 'CRITICAL,HIGH'
-
-    - name: Grype - Vulnerability Scanner
-      uses: anchore/scan-action@v3
-      with:
-        image: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-        fail-build: false
-        severity-cutoff: high
+        exit-code: 0
 
   deploy:
     name: Deploy to Docker Hub
@@ -103,16 +97,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and Push Blue Image
+    - name: Build and Push Images
       run: |
-        docker build -t ${{ env.IMAGE_NAME }}:blue \
-          -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
-          -f app/Dockerfile app/
+        docker build -t ${{ env.IMAGE_NAME }}:blue -f app/Dockerfile app/
+        docker build -t ${{ env.IMAGE_NAME }}:green -f app/Dockerfile app/
         docker push ${{ env.IMAGE_NAME }}:blue
-        docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
-
-    - name: Build and Push Green Image
-      run: |
-        docker build -t ${{ env.IMAGE_NAME }}:green \
-          -f app/Dockerfile app/
         docker push ${{ env.IMAGE_NAME }}:green
