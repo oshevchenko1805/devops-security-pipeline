@@ -17,6 +17,9 @@ spec:
         app: devops-app
         version: blue
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
       - name: app
         image: oshevchenko1805/devops-security-pipeline:blue
@@ -27,6 +30,10 @@ spec:
           value: "blue"
         - name: APP_VERSION
           value: "1.0.0"
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
         livenessProbe:
           httpGet:
             path: /health
