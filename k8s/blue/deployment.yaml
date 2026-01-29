@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-blue
+  labels:
+    app: devops-app
+    version: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: devops-app
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: devops-app
+        version: blue
+    spec:
+      containers:
+      - name: app
+        image: oshevchenko1805/devops-security-pipeline:blue
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ENVIRONMENT
+          value: "blue"
+        - name: APP_VERSION
+          value: "1.0.0"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 3
